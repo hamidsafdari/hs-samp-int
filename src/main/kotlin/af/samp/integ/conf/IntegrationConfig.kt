@@ -8,13 +8,16 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.integration.annotation.InboundChannelAdapter
 import org.springframework.integration.annotation.Poller
 import org.springframework.integration.annotation.ServiceActivator
+import org.springframework.integration.channel.interceptor.WireTap
 import org.springframework.integration.config.EnableIntegration
 import org.springframework.integration.dsl.MessageChannels
 import org.springframework.integration.file.FileReadingMessageSource
 import org.springframework.integration.file.FileWritingMessageHandler
 import org.springframework.integration.file.filters.SimplePatternFileListFilter
 import org.springframework.integration.file.support.FileExistsMode
+import org.springframework.messaging.Message
 import org.springframework.messaging.MessageChannel
+import org.springframework.messaging.handler.annotation.Payload
 import java.io.File
 
 @Configuration
@@ -36,11 +39,16 @@ class IntegrationConfig @Autowired constructor(private val appContext: Applicati
   @Bean
   fun fileChannel(): MessageChannel {
     return MessageChannels.publishSubscribe()
-      .wireTap { message, timeout ->
-        logger.debug("message: {}", message)
-        true
-      }
+      .interceptor(WireTap(loggerChannel()))
       .get()
+  }
+
+  @Bean
+  fun loggerChannel(): MessageChannel = MessageChannels.publishSubscribe().get()
+
+  @ServiceActivator(inputChannel = "loggerChannel")
+  fun databaseLogger(@Payload message: Message<*>) {
+    logger.debug("database logging message: {}", message)
   }
 
   @Bean
