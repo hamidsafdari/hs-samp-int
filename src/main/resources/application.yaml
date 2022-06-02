@@ -1,0 +1,3 @@
+logging:
+  pattern:
+    console: "%d{HHmmss.SSS} %highlight(%1.-1level) [%5.5thread] %cyan(%20.-20logger{20}): %msg %n"
