@@ -1,21 +1,27 @@
 package af.samp.integ.conf
 
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.integration.annotation.InboundChannelAdapter
 import org.springframework.integration.annotation.Poller
 import org.springframework.integration.annotation.ServiceActivator
-import org.springframework.integration.channel.DirectChannel
 import org.springframework.integration.config.EnableIntegration
+import org.springframework.integration.dsl.MessageChannels
 import org.springframework.integration.file.FileReadingMessageSource
 import org.springframework.integration.file.FileWritingMessageHandler
 import org.springframework.integration.file.filters.SimplePatternFileListFilter
 import org.springframework.integration.file.support.FileExistsMode
+import org.springframework.messaging.MessageChannel
 import java.io.File
 
 @Configuration
 @EnableIntegration
-class IntegrationConfig {
+class IntegrationConfig @Autowired constructor(private val appContext: ApplicationContext) {
+  private val logger = LoggerFactory.getLogger(IntegrationConfig::class.java)
+
   init {
     val inputDir = File(INPUT_DIR)
     if (!inputDir.exists()) {
@@ -28,7 +34,14 @@ class IntegrationConfig {
   }
 
   @Bean
-  fun fileChannel() = DirectChannel()
+  fun fileChannel(): MessageChannel {
+    return MessageChannels.publishSubscribe()
+      .wireTap { message, timeout ->
+        logger.debug("message: {}", message)
+        true
+      }
+      .get()
+  }
 
   @Bean
   @InboundChannelAdapter(value = "fileChannel", poller = [Poller(fixedDelay = "1000")])
