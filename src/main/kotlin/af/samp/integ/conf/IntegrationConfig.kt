@@ -39,7 +39,7 @@ class IntegrationConfig @Autowired constructor(private val appContext: Applicati
   @Bean
   fun fileChannel(): MessageChannel {
     return MessageChannels.publishSubscribe()
-      .interceptor(WireTap(loggerChannel()))
+      .wireTap(loggerChannel())
       .get()
   }
 
