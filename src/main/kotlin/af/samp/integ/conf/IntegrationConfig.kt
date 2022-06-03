@@ -1,8 +1,6 @@
 package af.samp.integ.conf
 
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.integration.annotation.IntegrationComponentScan
@@ -17,17 +15,17 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 @Configuration
 @EnableIntegration
 @IntegrationComponentScan("af.samp.integ.int")
-class IntegrationConfig @Autowired constructor(private val appContext: ApplicationContext) {
+class IntegrationConfig {
   private val logger = LoggerFactory.getLogger(IntegrationConfig::class.java)
   private val executor = ThreadPoolTaskExecutor().apply {
-    corePoolSize = 3
-    maxPoolSize = 3
+    corePoolSize = 16
+    maxPoolSize = 16
     setThreadNamePrefix("name-t-")
     initialize()
   }
 
   @Bean
-  fun nameRequestChannel(): MessageChannel = MessageChannels.direct()
+  fun nameRequestChannel(): MessageChannel = MessageChannels.publishSubscribe(executor)
     .wireTap(loggerChannel())
     .get()
 
