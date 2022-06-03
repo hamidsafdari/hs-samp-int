@@ -30,10 +30,11 @@ class IntegrationConfig {
     .get()
 
   @Bean
-  fun loggerChannel(): MessageChannel = MessageChannels.publishSubscribe().get()
+  fun loggerChannel(): MessageChannel = MessageChannels.executor(executor).get()
 
   @ServiceActivator(inputChannel = "loggerChannel")
   fun channelLogger(@Payload message: Message<*>) {
-    logger.debug("processing message: {}", message)
+    Thread.sleep(150)
+    logger.debug("logging: {}", message)
   }
 }
